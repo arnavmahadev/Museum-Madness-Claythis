@@ -46,7 +46,7 @@ public class GunScript : MonoBehaviour {
 		pmS = player.GetComponent<PlayerMovementScript>();
 
 		bulletSpawnPlace = GameObject.FindGameObjectWithTag("BulletSpawn");
-		hitMarker = transform.FindChild ("hitMarkerSound").GetComponent<AudioSource> ();
+		hitMarker = transform.Find ("hitMarkerSound").GetComponent<AudioSource> ();
 
 		startLook = mouseSensitvity_notAiming;
 		startAim = mouseSensitvity_aiming;
@@ -157,7 +157,7 @@ public class GunScript : MonoBehaviour {
 	 */
 	void CrossHairExpansionWhenWalking(){
 
-		if(player.GetComponent<Rigidbody>().velocity.magnitude > 1 && Input.GetAxis("Fire1") == 0){//ifnot shooting
+		if(player.GetComponent<Rigidbody>().linearVelocity.magnitude > 1 && Input.GetAxis("Fire1") == 0){//ifnot shooting
 
 			expandValues_crosshair += new Vector2(20, 40) * Time.deltaTime;
 			if(player.GetComponent<PlayerMovementScript>().maxSpeed < runningSpeed){ //not running

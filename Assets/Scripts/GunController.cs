@@ -17,7 +17,7 @@ public class GunController : MonoBehaviour
     [SerializeField] private float muzzleFlashDuration = 0.05f;
 
     [Header("Reload Rotation")]
-    [SerializeField] private Transform armsTransform; // 🔁 add the gun's root transform here
+    [SerializeField] private Transform armsTransform;
     [SerializeField] private Vector3 reloadEulerRotation = new Vector3(-30f, 0f, 0f);
     [SerializeField] private float reloadRotationSpeed = 5f;
 
@@ -107,7 +107,7 @@ public class GunController : MonoBehaviour
 
     public void OnReload()
     {
-        if (isReloading) return;
+        if (isReloading || currentAmmo == magSize) return;
 
         isReloading = true;
         gunAnimator.SetBool("IsReloading", true);
