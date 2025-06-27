@@ -14,6 +14,9 @@ namespace StarterAssets
 		public bool sprint;
 		public bool crouch;
 		public bool shoot;
+		public bool switchToMelee;
+		public bool switchToGun;
+		public bool reload;
 
 		[Header("Movement Settings")]
 		public bool analogMovement;
@@ -58,6 +61,26 @@ namespace StarterAssets
 			else if (context.canceled)
 			{
 				ShootInput(false);
+			}
+		}
+
+		public void OnSwitchToMelee(InputAction.CallbackContext context)
+		{
+			if (context.performed)
+				switchToMelee = true;
+		}
+
+		public void OnSwitchToGun(InputAction.CallbackContext context)
+		{
+			if (context.performed)
+				switchToGun = true;
+		}
+
+		public void OnReload(InputAction.CallbackContext context)
+		{
+			if (context.performed)
+			{
+				reload = true;
 			}
 		}
 
