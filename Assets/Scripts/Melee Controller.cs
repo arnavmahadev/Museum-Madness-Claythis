@@ -3,8 +3,7 @@ using UnityEngine;
 
 public class MeleeController : MonoBehaviour
 {
-    [SerializeField] private Animator meleeAnimator;
-    [SerializeField] private float punchDuration = 0.483f;
+    [SerializeField] private Animator animator;
 
     private bool punchLeftNext = true;
     public bool IsPunching { get; private set; }
@@ -12,26 +11,22 @@ public class MeleeController : MonoBehaviour
     public void OnShoot()
     {
         if (IsPunching) return;
-
         IsPunching = true;
 
         if (punchLeftNext)
-        {
-            meleeAnimator.SetTrigger("PunchLeft");
-        }
+            animator.SetTrigger("PunchLeft");
         else
-        {
-            meleeAnimator.SetTrigger("PunchRight");
-        }
+            animator.SetTrigger("PunchRight");
 
         punchLeftNext = !punchLeftNext;
 
+        // Optional: wait ~0.4–1.2s depending on animation length to re-enable punching
         StartCoroutine(ResetPunching());
     }
 
     private IEnumerator ResetPunching()
     {
-        yield return new WaitForSeconds(punchDuration);
+        yield return new WaitForSeconds(0f); // Use a middle value or sync to anim
         IsPunching = false;
     }
 }
