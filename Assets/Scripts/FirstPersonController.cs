@@ -45,7 +45,6 @@ namespace StarterAssets
         [SerializeField] private Transform gunRestPos;
         [SerializeField] private Transform meleeActivePos;
         [SerializeField] private Transform meleeRestPos;
-        [SerializeField] private float switchSpeed = 10f;
 
         private float _cinemachineTargetPitch;
         private float _speed;
@@ -60,8 +59,8 @@ namespace StarterAssets
         private Animator _meleeAnimator;
         [SerializeField] private float punchCooldown = 0.5f;
         private float punchTimer = 0f;
-        [SerializeField] private float shootCooldown = 0.2f; // Duration to keep shooting animation active
-        private float shootTimer = 0f; // Timer for shooting state
+        [SerializeField] private float shootCooldown = 0.2f;
+        private float shootTimer = 0f;
 
 #if ENABLE_INPUT_SYSTEM
         private PlayerInput _playerInput;
@@ -102,15 +101,13 @@ namespace StarterAssets
             _meleeAnimator = meleeArms.GetComponent<Animator>();
             _gunAnimator = gunArms.GetComponent<Animator>();
 
-            // Set only melee arms active at start
             gunArms.SetActive(false);
             meleeArms.SetActive(true);
             isUsingGun = false;
 
-            // Position gun at rest position initially
             gunTransform.position = gunRestPos.position;
             gunTransform.rotation = gunRestPos.rotation;
-            // Position melee at active position
+
             meleeTransform.position = meleeActivePos.position;
             meleeTransform.rotation = meleeActivePos.rotation;
 
@@ -312,7 +309,7 @@ namespace StarterAssets
             {
                 _gunController.OnReload();
                 _input.reload = false;
-                _input.shoot = false; // Prevent queued shooting during reload
+                _input.shoot = false;
             }
         }
 
@@ -337,14 +334,12 @@ namespace StarterAssets
             float duration = 0.2f;
             float elapsed = 0f;
 
-            // Determine current and new weapon transforms
             Transform currentWeapon = isUsingGun ? gunTransform : meleeTransform;
             Transform currentRest = isUsingGun ? gunRestPos : meleeRestPos;
             Transform newWeapon = switchToGun ? gunTransform : meleeTransform;
             Transform newRest = switchToGun ? gunRestPos : meleeRestPos;
             Transform newActive = switchToGun ? gunActivePos : meleeActivePos;
 
-            // Move current weapon to rest position
             while (elapsed < duration)
             {
                 currentWeapon.position = Vector3.Lerp(currentWeapon.position, currentRest.position, elapsed / duration);
@@ -355,19 +350,15 @@ namespace StarterAssets
             currentWeapon.position = currentRest.position;
             currentWeapon.rotation = currentRest.rotation;
 
-            // Disable current arms and enable new arms
             gunArms.SetActive(switchToGun);
             meleeArms.SetActive(!switchToGun);
             isUsingGun = switchToGun;
 
-            // Reset elapsed time for the new weapon transition
             elapsed = 0f;
 
-            // Ensure new weapon starts at rest position
             newWeapon.position = newRest.position;
             newWeapon.rotation = newRest.rotation;
 
-            // Move new weapon to active position
             while (elapsed < duration)
             {
                 newWeapon.position = Vector3.Lerp(newRest.position, newActive.position, elapsed / duration);
