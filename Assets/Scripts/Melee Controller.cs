@@ -20,13 +20,12 @@ public class MeleeController : MonoBehaviour
 
         punchLeftNext = !punchLeftNext;
 
-        // Optional: wait ~0.4–1.2s depending on animation length to re-enable punching
         StartCoroutine(ResetPunching());
     }
 
     private IEnumerator ResetPunching()
     {
-        yield return new WaitForSeconds(0f); // Use a middle value or sync to anim
+        yield return new WaitForSeconds(0.4f);
         IsPunching = false;
     }
 }
