@@ -38,14 +38,6 @@ namespace StarterAssets
         public float TopClamp = 90.0f;
         public float BottomClamp = -90.0f;
 
-        [Header("Weapon Transforms")]
-        [SerializeField] private Transform gunTransform;
-        [SerializeField] private Transform meleeTransform;
-        [SerializeField] private Transform gunActivePos;
-        [SerializeField] private Transform gunRestPos;
-        [SerializeField] private Transform meleeActivePos;
-        [SerializeField] private Transform meleeRestPos;
-
         private float _cinemachineTargetPitch;
         private float _speed;
         private float _rotationVelocity;
@@ -56,11 +48,9 @@ namespace StarterAssets
 
         private bool isCrouching = false;
 
-        private Animator _meleeAnimator;
+        [SerializeField] private Animator _meleeAnimator;
         [SerializeField] private float punchCooldown = 0.5f;
         private float punchTimer = 0f;
-        [SerializeField] private float shootCooldown = 0.2f;
-        private float shootTimer = 0f;
 
 #if ENABLE_INPUT_SYSTEM
         private PlayerInput _playerInput;
@@ -72,16 +62,19 @@ namespace StarterAssets
         private Vector3 _cameraRootDefaultPos;
         private Vector3 _cameraRootCrouchPos;
         [SerializeField] private Transform PlayerCameraRoot;
-        private GunController _gunController;
-        private bool isUsingGun;
+        [SerializeField] private Transform modelTransform;
+        [SerializeField] private GunController _gunController;
+        [SerializeField] private RuntimeAnimatorController meleeAnimatorController;
+        [SerializeField] private RuntimeAnimatorController gunAnimatorController;
+        [SerializeField] private Transform modelRoot;
+        [SerializeField] private Transform gunTransform;
+        private Camera mainCamera; // Reference to the main camera
+
+
+        private enum WeaponMode { Melee, Gun }
+        private WeaponMode currentMode = WeaponMode.Melee; // Start in melee mode
+
         private const float _threshold = 0.01f;
-        [SerializeField] private GameObject gunArms;
-        [SerializeField] private GameObject meleeArms;
-        [SerializeField] private Animator _gunAnimator;
-
-        private bool isSwitchingWeapon = false;
-        private Coroutine currentSwitchCoroutine;
-
         private bool IsCurrentDeviceMouse => _playerInput.currentControlScheme == "KeyboardMouse";
 
         private void Awake()
@@ -90,26 +83,23 @@ namespace StarterAssets
             {
                 _mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
             }
+            mainCamera = _mainCamera.GetComponent<Camera>(); // Get Camera component
+
+            // No renderer changes, just disable gun initially
+            if (gunTransform != null)
+            {
+                gunTransform.gameObject.SetActive(false); // Hide gun initially
+            }
         }
 
         private void Start()
         {
             _controller = GetComponent<CharacterController>();
             _input = GetComponent<StarterAssetsInputs>();
-            _meleeController = GetComponentInChildren<MeleeController>();
-            _gunController = GetComponentInChildren<GunController>();
-            _meleeAnimator = meleeArms.GetComponent<Animator>();
-            _gunAnimator = gunArms.GetComponent<Animator>();
-
-            gunArms.SetActive(false);
-            meleeArms.SetActive(true);
-            isUsingGun = false;
-
-            gunTransform.position = gunRestPos.position;
-            gunTransform.rotation = gunRestPos.rotation;
-
-            meleeTransform.position = meleeActivePos.position;
-            meleeTransform.rotation = meleeActivePos.rotation;
+            _meleeController = GetComponentInChildren<MeleeController>(true);
+            _gunController = GetComponentInChildren<GunController>(true);
+            _meleeAnimator.runtimeAnimatorController = meleeAnimatorController;
+            _gunController.enabled = false;
 
 #if ENABLE_INPUT_SYSTEM
             _playerInput = GetComponent<PlayerInput>();
@@ -119,7 +109,7 @@ namespace StarterAssets
             _jumpTimeoutDelta = JumpTimeout;
             _fallTimeoutDelta = FallTimeout;
             _cameraRootDefaultPos = PlayerCameraRoot.transform.localPosition;
-            _cameraRootCrouchPos = _cameraRootDefaultPos + new Vector3(0f, -0.8f, 0f);
+            _cameraRootCrouchPos = _cameraRootDefaultPos + new Vector3(0f, -0.25f, 0f);
         }
 
         private void Update()
@@ -129,13 +119,22 @@ namespace StarterAssets
             Move();
             HandleCrouch();
             HandleShooting();
-            HandleWeaponSwitching();
-            HandleReloading();
+            HandleWeaponSwitch();
         }
 
         private void LateUpdate()
         {
             CameraRotation();
+
+            if (gunTransform != null)
+            {
+                gunTransform.gameObject.SetActive(currentMode == WeaponMode.Gun);
+            }
+        }
+
+        private void SetHandRenderers(bool enabled)
+        {
+            // Do nothing, leaving the renderer enabled to keep the character visible
         }
 
         private void GroundedCheck()
@@ -155,7 +154,10 @@ namespace StarterAssets
 
                 _cinemachineTargetPitch = ClampAngle(_cinemachineTargetPitch, BottomClamp, TopClamp);
 
+                // Apply vertical rotation (pitch) to camera target only
                 CinemachineCameraTarget.transform.localRotation = Quaternion.Euler(_cinemachineTargetPitch, 0.0f, 0.0f);
+
+                // Apply horizontal rotation (yaw) to the body
                 transform.Rotate(Vector3.up * _rotationVelocity);
             }
         }
@@ -163,7 +165,6 @@ namespace StarterAssets
         private void Move()
         {
             float targetSpeed = isCrouching ? CrouchSpeed : (_input.sprint ? SprintSpeed : MoveSpeed);
-
             if (_input.move == Vector2.zero) targetSpeed = 0.0f;
 
             float currentHorizontalSpeed = new Vector3(_controller.velocity.x, 0.0f, _controller.velocity.z).magnitude;
@@ -186,32 +187,27 @@ namespace StarterAssets
 
             _controller.Move(inputDirection.normalized * (_speed * Time.deltaTime) + new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
 
-            float horizontalVelocity = new Vector3(_controller.velocity.x, 0, _controller.velocity.z).magnitude;
-            bool isStrafing = _input.move.y == 0f && Mathf.Abs(_input.move.x) > 0f;
+            if (_meleeController.IsPunching)
+            {
+                _meleeAnimator.SetFloat("Speed", 0f);
+                _meleeAnimator.SetFloat("Strafe", 0f);
+                return;
+            }
 
-            if (isUsingGun)
-            {
-                if (_gunController.IsShooting || _gunController.IsReloading)
-                {
-                    // Override movement anims while shooting or reloading
-                    _gunAnimator.SetFloat("Speed", 0f);
-                    _gunAnimator.speed = 1f;
-                }
-                else
-                {
-                    _gunAnimator.SetFloat("Speed", horizontalVelocity);
-                    _gunAnimator.speed = (!isCrouching && !isStrafing)
-                        ? Mathf.Clamp(Mathf.Lerp(0.5f, 1f, (horizontalVelocity - CrouchSpeed) / (SprintSpeed - CrouchSpeed)), 0.5f, 1f)
-                        : 1f;
-                }
-            }
-            else
-            {
-                _meleeAnimator.SetFloat("Speed", isCrouching || isStrafing ? 0f : horizontalVelocity);
-                _meleeAnimator.speed = (!isCrouching && !isStrafing && horizontalVelocity > 0.1f && horizontalVelocity < SprintSpeed)
-                    ? Mathf.Clamp(Mathf.Lerp(0.5f, 1f, (horizontalVelocity - CrouchSpeed) / (SprintSpeed - CrouchSpeed)), 0.5f, 1f)
-                    : 1f;
-            }
+            Vector3 localInputDir = modelTransform.InverseTransformDirection(inputDirection.normalized);
+
+            float forwardAmount = localInputDir.z;
+            float strafeAmount = localInputDir.x;
+
+            _meleeAnimator.SetFloat("Speed", forwardAmount * _speed);
+            _meleeAnimator.SetFloat("Strafe", strafeAmount * _speed);
+
+            modelTransform.localRotation = Quaternion.identity;
+
+            float horizontalVelocity = new Vector3(_controller.velocity.x, 0, _controller.velocity.z).magnitude;
+            _meleeAnimator.speed = (!isCrouching && horizontalVelocity > 0.1f && horizontalVelocity < SprintSpeed)
+                ? Mathf.Clamp(Mathf.Lerp(0.5f, 1f, (horizontalVelocity - CrouchSpeed) / (SprintSpeed - CrouchSpeed)), 0.5f, 1f)
+                : 1f;
         }
 
         private void JumpAndGravity()
@@ -249,14 +245,10 @@ namespace StarterAssets
             if (_input.crouch && !isCrouching)
             {
                 isCrouching = true;
-                _controller.height = 1.2f;
-                _controller.center = new Vector3(0f, 0.6f, 0f);
             }
             else if (!_input.crouch && isCrouching)
             {
                 isCrouching = false;
-                _controller.height = 2f;
-                _controller.center = new Vector3(0f, 1f, 0f);
             }
 
             Vector3 targetPos = isCrouching ? _cameraRootCrouchPos : _cameraRootDefaultPos;
@@ -265,111 +257,42 @@ namespace StarterAssets
 
         private void HandleShooting()
         {
-            if (_input.shoot && punchTimer <= 0f)
+            if (currentMode == WeaponMode.Melee && _input.shoot && punchTimer <= 0f)
             {
-                if (isUsingGun)
-                {
-                    if (!_gunController.IsReloading)
-                    {
-                        _gunController.OnShoot();
-                        shootTimer = shootCooldown;
-                    }
-                }
-                else
-                {
-                    _meleeController.OnShoot();
-                    punchTimer = punchCooldown;
-                }
+                _meleeController.OnShoot();
+                punchTimer = punchCooldown;
             }
 
-            if (!isUsingGun && punchTimer > 0f)
+            if (currentMode == WeaponMode.Gun)
+            {
+                if (_input.shoot) _gunController?.OnShoot();
+                if (_input.reload) _gunController?.OnReload();
+            }
+
+            if (punchTimer > 0f)
                 punchTimer -= Time.deltaTime;
-
-            if (isUsingGun && shootTimer > 0f)
-                shootTimer -= Time.deltaTime;
         }
 
-        private void HandleWeaponSwitching()
+        private void HandleWeaponSwitch()
         {
-            if (_input.switchToGun)
+            if (_input.switchToMelee && currentMode != WeaponMode.Melee)
             {
-                SwitchToGun();
-                _input.switchToGun = false;
+                currentMode = WeaponMode.Melee;
+                _meleeAnimator.runtimeAnimatorController = meleeAnimatorController;
+                _meleeController.enabled = true;
+                _gunController.enabled = false;
             }
-            if (_input.switchToMelee)
+            else if (_input.switchToGun && currentMode != WeaponMode.Gun)
             {
-                SwitchToMelee();
-                _input.switchToMelee = false;
+                currentMode = WeaponMode.Gun;
+                _meleeAnimator.runtimeAnimatorController = gunAnimatorController;
+                _meleeController.enabled = false;
+                _gunController.enabled = true;
             }
-        }
 
-        private void HandleReloading()
-        {
-            if (isUsingGun && _input.reload && !_gunController.IsReloading)
-            {
-                _gunController.OnReload();
-                _input.reload = false;
-                _input.shoot = false;
-            }
-        }
-
-        public void SwitchToGun()
-        {
-            if (isUsingGun || isSwitchingWeapon) return;
-            if (currentSwitchCoroutine != null) StopCoroutine(currentSwitchCoroutine);
-            currentSwitchCoroutine = StartCoroutine(SwitchWeaponCoroutine(true));
-        }
-
-        public void SwitchToMelee()
-        {
-            if (!isUsingGun || isSwitchingWeapon) return;
-            if (currentSwitchCoroutine != null) StopCoroutine(currentSwitchCoroutine);
-            currentSwitchCoroutine = StartCoroutine(SwitchWeaponCoroutine(false));
-        }
-
-        private IEnumerator SwitchWeaponCoroutine(bool switchToGun)
-        {
-            isSwitchingWeapon = true;
-
-            float duration = 0.2f;
-            float elapsed = 0f;
-
-            Transform currentWeapon = isUsingGun ? gunTransform : meleeTransform;
-            Transform currentRest = isUsingGun ? gunRestPos : meleeRestPos;
-            Transform newWeapon = switchToGun ? gunTransform : meleeTransform;
-            Transform newRest = switchToGun ? gunRestPos : meleeRestPos;
-            Transform newActive = switchToGun ? gunActivePos : meleeActivePos;
-
-            while (elapsed < duration)
-            {
-                currentWeapon.position = Vector3.Lerp(currentWeapon.position, currentRest.position, elapsed / duration);
-                currentWeapon.rotation = Quaternion.Lerp(currentWeapon.rotation, currentRest.rotation, elapsed / duration);
-                elapsed += Time.deltaTime;
-                yield return null;
-            }
-            currentWeapon.position = currentRest.position;
-            currentWeapon.rotation = currentRest.rotation;
-
-            gunArms.SetActive(switchToGun);
-            meleeArms.SetActive(!switchToGun);
-            isUsingGun = switchToGun;
-
-            elapsed = 0f;
-
-            newWeapon.position = newRest.position;
-            newWeapon.rotation = newRest.rotation;
-
-            while (elapsed < duration)
-            {
-                newWeapon.position = Vector3.Lerp(newRest.position, newActive.position, elapsed / duration);
-                newWeapon.rotation = Quaternion.Lerp(newRest.rotation, newActive.rotation, elapsed / duration);
-                elapsed += Time.deltaTime;
-                yield return null;
-            }
-            newWeapon.position = newActive.position;
-            newWeapon.rotation = newActive.rotation;
-
-            isSwitchingWeapon = false;
+            _input.switchToMelee = false;
+            _input.switchToGun = false;
+            modelRoot.localRotation = Quaternion.Euler(0f, currentMode == WeaponMode.Gun ? 45f : 0f, 0f);
         }
     }
 }
