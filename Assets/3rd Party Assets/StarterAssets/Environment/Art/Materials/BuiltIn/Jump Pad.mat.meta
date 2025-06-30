@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 596ef94758511c1468c2183112ff3b65
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 282203
+  packageName: 'XtremeFPS: First Person Controller'
+  packageVersion: 1.1.0
+  assetPath: Assets/3rd Party Assets/StarterAssets/Environment/Art/Materials/BuiltIn/Jump
+    Pad.mat
+  uploadId: 688664

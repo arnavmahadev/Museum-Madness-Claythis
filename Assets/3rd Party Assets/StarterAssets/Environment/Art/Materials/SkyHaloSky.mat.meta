@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e523c896238589445ae28370258d26c6
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 282203
+  packageName: 'XtremeFPS: First Person Controller'
+  packageVersion: 1.1.0
+  assetPath: Assets/3rd Party Assets/StarterAssets/Environment/Art/Materials/SkyHaloSky.mat
+  uploadId: 688664

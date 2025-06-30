@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 22c3f9f709a7d6744a7c12a7ea21edce
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 282203
+  packageName: 'XtremeFPS: First Person Controller'
+  packageVersion: 1.1.0
+  assetPath: Assets/3rd Party Assets/StarterAssets/Environment/Art/Materials/HDRP/Gravel.mat
+  uploadId: 688664

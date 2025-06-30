@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: c32d2aaff987824428830350b96cb627
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 282203
+  packageName: 'XtremeFPS: First Person Controller'
+  packageVersion: 1.1.0
+  assetPath: Assets/Spoiled Unknown/XtremeFPS/Scripts/Editor/FPS Input Manager Editor.cs
+  uploadId: 688664
