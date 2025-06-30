@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: c5ebd71d7a6f090448995a4ea9158c0d
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 282203
+  packageName: 'XtremeFPS: First Person Controller'
+  packageVersion: 1.1.0
+  assetPath: Assets/Spoiled Unknown/XtremeFPS/Scripts/Editor/First Person Controller
+    Editor.cs
+  uploadId: 688664

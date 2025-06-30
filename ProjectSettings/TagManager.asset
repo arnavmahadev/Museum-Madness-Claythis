@@ -5,14 +5,20 @@ TagManager:
   serializedVersion: 3
   tags:
   - CinemachineTarget
+  - Concrete
+  - Grass
+  - Gravel
+  - Water
+  - Metals
+  - Wood
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Physics
   - Water
   - UI
-  - 
+  - Interactable
   - 
   - 
   - 

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 57bad7eb458162d4f9dd76f4928dbcb6
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 282203
+  packageName: 'XtremeFPS: First Person Controller'
+  packageVersion: 1.1.0
+  assetPath: Assets/3rd Party Assets/StarterAssets/Environment/Art/Materials/HDRP/Walls.mat
+  uploadId: 688664

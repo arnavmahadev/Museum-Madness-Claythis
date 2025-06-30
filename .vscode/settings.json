@@ -66,5 +66,5 @@
     "explorer.fileNesting.patterns": {
         "*.sln": "*.csproj"
     },
-    "dotnet.defaultSolution": "Museum-Madness-Claythis.sln"
+    "dotnet.defaultSolution": "Museum Madness Claythis.sln"
 }

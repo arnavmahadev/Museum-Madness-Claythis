@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0d88a693dc253814a8bf236a1e744b04
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 282203
+  packageName: 'XtremeFPS: First Person Controller'
+  packageVersion: 1.1.0
+  assetPath: Assets/Spoiled Unknown/XtremeFPS/Scripts/Input System/InputSystem.inputsettings.asset
+  uploadId: 688664
