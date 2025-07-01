@@ -137,9 +137,6 @@ namespace XtremeFPS.WeaponSystem
         private Vector3 reloadStartPosition;
         private bool isSwitching = false;
         public float weaponSwitchSpeed = 4f;
-
-
-
         #endregion
 
         #region MonoBehaviour Callbacks
@@ -169,19 +166,8 @@ namespace XtremeFPS.WeaponSystem
             WeaponBobbing();
             JumpSwayEffect();
 
-            UpdateWeaponPositionLerp(); // 👈 New centralized position lerp
+            UpdateWeaponPositionLerp();
         }
-
-        /*private void LateUpdate()
-        {
-            if (reloading && canAim)
-            {
-                weaponFollow.overridePosition = true;
-                Vector3 target = reloadLocalPosition;
-                weaponFollow.localPos = Vector3.Lerp(weaponFollow.localPos, target, Time.deltaTime * aimSmoothing);
-            }
-        }
-        */
         #endregion
 
         #region Private Methods
@@ -256,18 +242,22 @@ namespace XtremeFPS.WeaponSystem
             if (currentWeapon != "Pistol" && currentWeapon != "Rifle") return;
             readyToShoot = false;
 
-            // Calculate shoot direction from camera (center of screen)
             Vector3 shootDirection = cameraTransform.forward;
 
-            // Add spread for realism
             float spread = 0.01f;
             shootDirection += cameraTransform.right * Random.Range(-spread, spread);
             shootDirection += cameraTransform.up * Random.Range(-spread, spread);
             shootDirection.Normalize();
 
-            // Raycast from camera
             if (Physics.Raycast(cameraTransform.position, shootDirection, out RaycastHit hit, 100f))
             {
+                /*var enemyHealth = hit.collider.GetComponent<EnemyHealth>();
+                if (enemyHealth != null)
+                {
+                    enemyHealth.TakeDamage(bulletDamage);
+                }
+                */
+                
                 if (particlesPrefab != null)
                 {
                     GameObject impact = PoolManager.Instance.SpawnObject(
