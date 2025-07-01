@@ -460,11 +460,11 @@ MonoBehaviour:
   timeBetweenEachShots: 0.1
   timeBetweenShooting: 0.1
   magazineSize: 10
-  totalBullets: 999
   bulletsPerTap: 1
-  reloadTime: 2.3
+  reloadTime: 2.5
   aiming: 0
   hardMode: 0
+  totalBullets: 999
   canAim: 1
   weaponHolder: {fileID: 1912103625}
   aimingLocalPosition: {x: 0, y: -0.12, z: 0.2336001}
@@ -508,6 +508,7 @@ MonoBehaviour:
   bulletReloadClip: {fileID: 8300000, guid: c35f284e9475b5f45b9edab995d9824c, type: 3}
   pistolObject: {fileID: 773620032}
   rifleObject: {fileID: 1252876412}
+  weaponSwitchSpeed: 4
 --- !u!82 &773620035
 AudioSource:
   m_ObjectHideFlags: 0
@@ -1083,11 +1084,11 @@ MonoBehaviour:
   timeBetweenEachShots: 0.1
   timeBetweenShooting: 0.1
   magazineSize: 20
-  totalBullets: 999
   bulletsPerTap: 1
-  reloadTime: 1.5
+  reloadTime: 2.5
   aiming: 0
   hardMode: 0
+  totalBullets: 999
   canAim: 1
   weaponHolder: {fileID: 1912103625}
   aimingLocalPosition: {x: 0, y: -0.12, z: 0.2336001}
@@ -1131,6 +1132,7 @@ MonoBehaviour:
   bulletReloadClip: {fileID: 8300000, guid: c35f284e9475b5f45b9edab995d9824c, type: 3}
   pistolObject: {fileID: 773620032}
   rifleObject: {fileID: 1252876412}
+  weaponSwitchSpeed: 4
 --- !u!82 &1252876415
 AudioSource:
   m_ObjectHideFlags: 0
@@ -1477,12 +1479,12 @@ MonoBehaviour:
   itemsToPool:
   - objectToPool: {fileID: 1660800468149884, guid: afc9c0a592c2d3e408e67df46bacd613, type: 3}
     objectAmount: 10
-    canExpand: 1
-    canRecycle: 0
+    canExpand: 0
+    canRecycle: 1
   - objectToPool: {fileID: 100002, guid: 957385c45b877e645a128e11a3efb2f9, type: 3}
     objectAmount: 10
-    canExpand: 1
-    canRecycle: 0
+    canExpand: 0
+    canRecycle: 1
 --- !u!1 &1603306155
 GameObject:
   m_ObjectHideFlags: 0
@@ -2231,6 +2233,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1912103625}
   - component: {fileID: 1912103626}
+  - component: {fileID: 1912103628}
+  - component: {fileID: 1912103627}
   m_Layer: 0
   m_Name: Weapon Holder
   m_TagString: Untagged
@@ -2273,6 +2277,117 @@ MonoBehaviour:
   pistolLocalEuler: {x: 0, y: 90, z: 0}
   localPos: {x: 0.1, y: -0.19, z: 0.07}
   localEuler: {x: 0, y: 90, z: 0}
+  overridePosition: 0
+--- !u!114 &1912103627
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1912103624}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df3cc8a58e1a45cb98b1f38e3c386f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  weaponFollow: {fileID: 0}
+--- !u!82 &1912103628
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1912103624}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1001 &1979352518
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -14483,11 +14598,11 @@ MonoBehaviour:
   timeBetweenEachShots: 0.075
   timeBetweenShooting: 0.075
   magazineSize: 30
-  totalBullets: 180
   bulletsPerTap: 1
   reloadTime: 1.5
   aiming: 1
   hardMode: 0
+  totalBullets: 180
   canAim: 1
   weaponHolder: {fileID: 0}
   aimingLocalPosition: {x: 0.002, y: -0.068, z: 0.239}
@@ -14531,6 +14646,7 @@ MonoBehaviour:
   bulletReloadClip: {fileID: 8300000, guid: c35f284e9475b5f45b9edab995d9824c, type: 3}
   pistolObject: {fileID: 0}
   rifleObject: {fileID: 0}
+  weaponSwitchSpeed: 4
 --- !u!4 &5089204011821614207
 Transform:
   m_ObjectHideFlags: 0
@@ -24778,11 +24894,11 @@ MonoBehaviour:
   timeBetweenEachShots: 0.5
   timeBetweenShooting: 0.1
   magazineSize: 100
-  totalBullets: 200
   bulletsPerTap: 1
   reloadTime: 1.5
   aiming: 1
   hardMode: 0
+  totalBullets: 200
   canAim: 1
   weaponHolder: {fileID: 0}
   aimingLocalPosition: {x: 0.002, y: -0.068, z: 0.239}
@@ -24826,6 +24942,7 @@ MonoBehaviour:
   bulletReloadClip: {fileID: 8300000, guid: c35f284e9475b5f45b9edab995d9824c, type: 3}
   pistolObject: {fileID: 0}
   rifleObject: {fileID: 0}
+  weaponSwitchSpeed: 4
 --- !u!1 &6022263180977406379
 GameObject:
   m_ObjectHideFlags: 0
