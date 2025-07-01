@@ -48,6 +48,11 @@ namespace XtremeFPS.InputHandling
         [HideInInspector] public bool isAimingHold;
         [HideInInspector] public bool isAimingTapped;
         [HideInInspector] public bool isTryingToInteract;
+        
+        //Weapon Switching
+        [HideInInspector] public bool switchToPistol;
+        [HideInInspector] public bool switchToRifle;
+
 
         #region Touch Controls
         public enum TouchDetectMode
@@ -112,6 +117,35 @@ namespace XtremeFPS.InputHandling
             playerInputAction.Shooting.FireHold.canceled += ShootInput;
             playerInputAction.Shooting.ADSHold.canceled += ADSHoldInput;
 
+            playerInputAction.Shooting.SwitchToPistol.performed += ctx =>
+            {
+                if (!switchToPistol)
+                {
+                    switchToPistol = true;
+                    StartCoroutine(ClearSwitchToPistol());
+                }
+            };
+
+            playerInputAction.Shooting.SwitchToRifle.performed += ctx =>
+            {
+                if (!switchToRifle)
+                {
+                    switchToRifle = true;
+                    StartCoroutine(ClearSwitchToRifle());
+                }
+            };
+
+            IEnumerator ClearSwitchToPistol()
+            {
+                yield return null;
+                switchToPistol = false;
+            }
+
+            IEnumerator ClearSwitchToRifle()
+            {
+                yield return null;
+                switchToRifle = false;
+            }
             #endregion
 
 #if UNITY_ANDROID || UNITY_IOS
@@ -148,6 +182,10 @@ namespace XtremeFPS.InputHandling
                 {
                     availableTouchIds.Remove(touch.touchId.ReadValue().ToString());
                 }
+
+                switchToPistol = false;
+                switchToRifle = false;
+
             }
         }
 

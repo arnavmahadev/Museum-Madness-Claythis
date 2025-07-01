@@ -218,6 +218,18 @@ namespace XtremeFPS.Editor
             GUI.color = Color.black;
             EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
             #endregion
+
+            #region Weapon Switching
+            GUI.color = Color.black;
+            EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+            GUILayout.Label("Weapon Switching", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, fontSize = 13 }, GUILayout.ExpandWidth(true));
+            EditorGUILayout.Space();
+            GUI.color = Color.white;
+            uni_WeaponSystem.pistolObject = (GameObject)EditorGUILayout.ObjectField(new GUIContent("Pistol Object", "The GameObject representing the pistol."), uni_WeaponSystem.pistolObject, typeof(GameObject), true);
+            uni_WeaponSystem.rifleObject = (GameObject)EditorGUILayout.ObjectField(new GUIContent("Rifle Object", "The GameObject representing the rifle."), uni_WeaponSystem.rifleObject, typeof(GameObject), true);
+            EditorGUILayout.Space();
+            #endregion
+
             #region Update Changes
             //Sets any changes from the prefab
             if (GUI.changed)
