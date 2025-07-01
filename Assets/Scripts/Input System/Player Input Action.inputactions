@@ -448,7 +448,7 @@
                     "name": "FireHold",
                     "type": "Button",
                     "id": "be6a9684-d3f0-428c-997a-c6ee7f7b7122",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -485,6 +485,24 @@
                     "type": "Button",
                     "id": "39a835ea-30f2-4046-9532-60f44c77919e",
                     "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "SwitchToPistol",
+                    "type": "Button",
+                    "id": "50d6fd24-0f3a-425b-a41d-6b93dfa152f3",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "SwitchToRifle",
+                    "type": "Button",
+                    "id": "0ac1308e-f52c-48ee-8e71-443a8445c877",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -598,6 +616,50 @@
                     "processors": "",
                     "groups": "Controller",
                     "action": "ADSTap",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c0ea1639-2584-43db-87ba-12ed2114d0af",
+                    "path": "<Keyboard>/1",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SwitchToPistol",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "8c2f76dd-d92d-45cc-b9cf-67b6b078ac86",
+                    "path": "<Gamepad>/buttonEast",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SwitchToPistol",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "77b07436-99ac-4fd5-a67b-b86db9a86157",
+                    "path": "<Keyboard>/2",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SwitchToRifle",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "07cf9ca7-e6db-41f3-b835-c7097dc9e4b9",
+                    "path": "<Gamepad>/buttonWest",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SwitchToRifle",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

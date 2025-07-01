@@ -3,6 +3,7 @@ using TMPro;
 using XtremeFPS.InputHandling;
 using XtremeFPS.PoolingSystem;
 using XtremeFPS.FPSController;
+using System.Collections;
 
 namespace XtremeFPS.WeaponSystem
 {
@@ -56,10 +57,7 @@ namespace XtremeFPS.WeaponSystem
         public bool canAim = true;
         public Transform weaponHolder;
         public Vector3 aimingLocalPosition = new Vector3(0f, -0.12f, 0.2336001f);
-        public float aimSmoothing = 6;
-
-        private Vector3 normalLocalPosition;
-        private Vector3 reloadLocalPosition;
+        public float aimSmoothing = 3f; // Reduced for slower, smoother transition
 
         //Camera Recoil 
         public bool haveCameraRecoil = true;
@@ -129,6 +127,17 @@ namespace XtremeFPS.WeaponSystem
 
         private AudioSource bulletSoundSource;
         private ForceWeaponFollow weaponFollow; // Reference to ForceWeaponFollow script
+
+        // Weapon Selection
+        private string currentWeapon = "Pistol";
+        public GameObject pistolObject;
+        public GameObject rifleObject;
+        private Vector3 targetLocalPos;
+        private Vector3 velocity = Vector3.zero;
+        private bool returningFromReload = false;
+        private Vector3 reloadStartPosition;
+
+
         #endregion
 
         #region MonoBehaviour Callbacks
@@ -141,11 +150,6 @@ namespace XtremeFPS.WeaponSystem
             BulletsLeft = magazineSize;
 
             lastPosition = transform.position;
-            if (canAim) 
-            {
-                normalLocalPosition = weaponFollow.localPos;
-                reloadLocalPosition = normalLocalPosition + new Vector3(0f, -0.5f, 0f); // Set reload position 0.5 units down
-            }
             if (haveRotationalSway) originRotation = transform.localRotation;
 
             SetBulletCountUI();
@@ -154,33 +158,37 @@ namespace XtremeFPS.WeaponSystem
 
         private void Update()
         {
+            HandleWeaponSwitching();
             PlayerWeaponsInput();
-
             DetermineAim();
-
             HandleWeaponRecoil();
             HandleCameraRecoil();
-
             WeaponRotationSway();
             WeaponBobbing();
             JumpSwayEffect();
+
+            UpdateWeaponPositionLerp(); // 👈 New centralized position lerp
         }
 
-        private void LateUpdate()
+        /*private void LateUpdate()
         {
             if (reloading && canAim)
             {
+                weaponFollow.overridePosition = true;
                 Vector3 target = reloadLocalPosition;
                 weaponFollow.localPos = Vector3.Lerp(weaponFollow.localPos, target, Time.deltaTime * aimSmoothing);
             }
         }
+        */
         #endregion
 
         #region Private Methods
         private void PlayerWeaponsInput()
         {
-             if (isGunAuto) shooting = inputManager.isFiringHold;
-             else shooting = inputManager.isFiringTapped;
+            if (currentWeapon != "Pistol" && currentWeapon != "Rifle") return;
+
+            if (isGunAuto) shooting = inputManager.isFiringHold;
+            else shooting = inputManager.isFiringTapped;
 
             //handle mouse inputs
             mouseX = inputManager.mouseDirection.x;
@@ -208,8 +216,40 @@ namespace XtremeFPS.WeaponSystem
         }
 
         #region Shooting && Reloading
+        private void UpdateWeaponPositionLerp()
+        {
+            if (!canAim) return;
+
+            if (reloading)
+            {
+                // Lerp down from whatever position the weapon was in before reload
+                targetLocalPos = reloadStartPosition + new Vector3(0f, -0.3f, -0.15f);
+                weaponFollow.overridePosition = true;
+                weaponFollow.localPos = Vector3.Lerp(weaponFollow.localPos, targetLocalPos, Time.deltaTime * aimSmoothing);
+            }
+            else if (returningFromReload)
+            {
+                // Lerp back to the saved pre-reload position
+                targetLocalPos = reloadStartPosition;
+                weaponFollow.overridePosition = true;
+                weaponFollow.localPos = Vector3.Lerp(weaponFollow.localPos, targetLocalPos, Time.deltaTime * aimSmoothing);
+
+                if (Vector3.Distance(weaponFollow.localPos, targetLocalPos) < 0.01f)
+                {
+                    weaponFollow.localPos = targetLocalPos;
+                    returningFromReload = false;
+                    weaponFollow.overridePosition = false;
+                }
+            }
+        }
+
+
+
+
+
         private void Shoot()
         {
+            if (currentWeapon != "Pistol" && currentWeapon != "Rifle") return;
             readyToShoot = false;
 
             // Calculate shoot direction from camera (center of screen)
@@ -267,7 +307,6 @@ namespace XtremeFPS.WeaponSystem
             if (bulletsShot > 0 && BulletsLeft > 0) Invoke(nameof(Shoot), timeBetweenEachShots);
         }
 
-
         private System.Collections.IEnumerator DespawnAfter(GameObject obj, float delay)
         {
             yield return new WaitForSeconds(delay);
@@ -275,28 +314,26 @@ namespace XtremeFPS.WeaponSystem
         }
         private void ResetShot()
         {
+            if (currentWeapon != "Pistol" && currentWeapon != "Rifle") return;
             readyToShoot = true;
         }
         private void Reload()
         {
-            reloading = true;
-            HandleReloadAnimation();
-            bulletSoundSource.PlayOneShot(bulletReloadClip);
-            Invoke(nameof(ReloadFinished), reloadTime);
+            if (currentWeapon != "Pistol" && currentWeapon != "Rifle") return;
+            reloadStartPosition = weaponFollow.localPos;
+            StartCoroutine(ReloadRoutine());
+
         }
         private void HandleReloadAnimation()
         {
+            if (currentWeapon != "Pistol" && currentWeapon != "Rifle") return;
             animator.SetBool("IsReloading", reloading);
         }
         private void ReloadFinished()
         {
+            if (currentWeapon != "Pistol" && currentWeapon != "Rifle") return;
             reloading = false;
             HandleReloadAnimation();
-            if (canAim)
-            {
-                Vector3 target = aiming ? aimingLocalPosition : normalLocalPosition;
-                weaponFollow.localPos = Vector3.Lerp(weaponFollow.localPos, target, Time.deltaTime * aimSmoothing);
-            }
             if (hardMode)
             {
                 switch (totalBullets.CompareTo(magazineSize))
@@ -314,8 +351,6 @@ namespace XtremeFPS.WeaponSystem
                         totalBullets = 0;
                         break;
                     default:
-                        // Handle the case when totalBullets and magazineSize cannot be compared directly
-                        // User can call functions here, like display text saying out of ammo...
                         break;
                 }
             }
@@ -335,18 +370,78 @@ namespace XtremeFPS.WeaponSystem
                     totalBullets = Mathf.Max(0, totalBullets);
                 }
             }
+
+            weaponFollow.overridePosition = true;
+            returningFromReload = true; // 👈 start lerping back up after reload
             SetBulletCountUI();
         }
+        /*private IEnumerator ReturnToPosition()
+        {
+            if (canAim)
+            {
+                weaponFollow.overridePosition = true;
+                Vector3 startPos = weaponFollow.localPos;
+                Vector3 target = aiming ? aimingLocalPosition : normalLocalPosition;
+                float elapsedTime = 0f;
+                float returnDuration = 1f;
+
+                while (elapsedTime < returnDuration)
+                {
+                    elapsedTime += Time.deltaTime;
+                    float t = elapsedTime / returnDuration;
+                    weaponFollow.localPos = Vector3.Lerp(startPos, target, t);
+                    yield return null;
+                }
+
+                weaponFollow.localPos = target;
+                yield return new WaitForSeconds(0.05f); // Wait one frame before disabling override
+                weaponFollow.overridePosition = false;
+            }
+        }*/
+
         private void SetBulletCountUI()
         {
             if (bulletCount == null) return;
             bulletCount.SetText(BulletsLeft + " / " + totalBullets);
         }
+
+        private void HandleWeaponSwitching()
+        {
+            if (inputManager.switchToPistol)
+            {
+                pistolObject.SetActive(true);
+                rifleObject.SetActive(false);
+                currentWeapon = "Pistol";
+            }
+
+            if (inputManager.switchToRifle)
+            {
+                pistolObject.SetActive(false);
+                rifleObject.SetActive(true);
+                currentWeapon = "Rifle";
+            }
+        }
+
+        private System.Collections.IEnumerator ReloadRoutine()
+        {
+            reloading = true;
+            HandleReloadAnimation();
+            bulletSoundSource.PlayOneShot(bulletReloadClip);
+
+            float t = 0f;
+            while (t < reloadTime)
+            {
+                t += Time.deltaTime;
+                yield return null;
+            }
+
+            ReloadFinished();
+        }
         #endregion
         #region Recoil
         private void HandleWeaponRecoil()
         {
-            if(!haveWeaponRecoil) return;
+            if (currentWeapon != "Pistol" && currentWeapon != "Rifle" || !haveWeaponRecoil) return;
             rotationRecoil = Vector3.Lerp(rotationRecoil, Vector3.zero, gunRotationReturnSpeed * Time.deltaTime);
             positionRecoil = Vector3.Lerp(positionRecoil, Vector3.zero, gunPositionReturnSpeed * Time.deltaTime);
 
@@ -356,7 +451,7 @@ namespace XtremeFPS.WeaponSystem
         }
         private void HandleCameraRecoil()
         {
-            if (!haveCameraRecoil) return;
+            if (currentWeapon != "Pistol" && currentWeapon != "Rifle" || !haveCameraRecoil) return;
 
             currentRotation = Vector3.Lerp(currentRotation, Vector3.zero, recoilReturnSpeed * Time.deltaTime);
             Rot = Vector3.Slerp(Rot, currentRotation, recoilRotationSpeed * Time.deltaTime);
@@ -365,13 +460,8 @@ namespace XtremeFPS.WeaponSystem
         #endregion
         private void DetermineAim()
         {
-            if (!canAim || reloading) return;
+            if (currentWeapon != "Pistol" && currentWeapon != "Rifle" || !canAim || reloading) return;
 
-            Vector3 target = normalLocalPosition;
-            if (aiming) target = aimingLocalPosition;
-
-            Vector3 desiredPosition = Vector3.Lerp(weaponFollow.localPos, target, Time.deltaTime * aimSmoothing);
-            weaponFollow.localPos = desiredPosition;
             if (aimUIImage != null)
             {
                 aimUIImage.SetActive(aiming);
@@ -379,10 +469,12 @@ namespace XtremeFPS.WeaponSystem
                 fpsController.enableZoom = aiming;
             }
         }
+
+
         #region Effects
             private void WeaponRotationSway()
         {
-            if(!haveRotationalSway) return;
+            if (currentWeapon != "Pistol" && currentWeapon != "Rifle" || !haveRotationalSway) return;
 
             Quaternion newAdjustedRotationX = Quaternion.AngleAxis(rotaionSwayIntensity * mouseX * -1f, Vector3.up);
             Quaternion targetRotation = originRotation * newAdjustedRotationX;
@@ -390,7 +482,7 @@ namespace XtremeFPS.WeaponSystem
         }
         private void WeaponBobbing()
         {
-            if(!haveBobbing || fpsController.MovementState == FirstPersonController.PlayerMovementState.Sliding) return;
+            if (currentWeapon != "Pistol" && currentWeapon != "Rifle" || !haveBobbing || fpsController.MovementState == FirstPersonController.PlayerMovementState.Sliding) return;
 
             if (!fpsController.IsGrounded)
             {
@@ -418,7 +510,7 @@ namespace XtremeFPS.WeaponSystem
         }
         private void JumpSwayEffect()
         {
-            if(!haveJumpSway || aiming) return;
+            if (currentWeapon != "Pistol" && currentWeapon != "Rifle" || !haveJumpSway || aiming) return;
 
             switch (fpsController.IsGrounded)
             {
