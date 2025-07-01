@@ -42,12 +42,11 @@ namespace XtremeFPS.WeaponSystem
         public float timeBetweenEachShots;
         public float timeBetweenShooting;
         public int magazineSize;
-        public int totalBullets;
         public int bulletsPerTap;
         public float reloadTime;
         public bool aiming;
         public bool hardMode;
-
+        public int totalBullets;
         private int bulletsShot;
         private bool readyToShoot;
         private bool shooting;
@@ -126,7 +125,7 @@ namespace XtremeFPS.WeaponSystem
         public AudioClip bulletReloadClip;
 
         private AudioSource bulletSoundSource;
-        private ForceWeaponFollow weaponFollow; // Reference to ForceWeaponFollow script
+        private ForceWeaponFollow weaponFollow;
 
         // Weapon Selection
         private string currentWeapon = "Pistol";
@@ -136,6 +135,9 @@ namespace XtremeFPS.WeaponSystem
         private Vector3 velocity = Vector3.zero;
         private bool returningFromReload = false;
         private Vector3 reloadStartPosition;
+        private bool isSwitching = false;
+        public float weaponSwitchSpeed = 4f;
+
 
 
         #endregion
@@ -199,8 +201,8 @@ namespace XtremeFPS.WeaponSystem
 
             if ((inputManager.isReloading || BulletsLeft == 0)
                 && BulletsLeft < magazineSize
-                && totalBullets > 0
                 && !reloading) Reload();
+
 
             //Shoot
             if (readyToShoot
@@ -249,6 +251,8 @@ namespace XtremeFPS.WeaponSystem
 
         private void Shoot()
         {
+            if (isSwitching || reloading) return;
+
             if (currentWeapon != "Pistol" && currentWeapon != "Rifle") return;
             readyToShoot = false;
 
@@ -271,13 +275,28 @@ namespace XtremeFPS.WeaponSystem
                         hit.point,
                         Quaternion.LookRotation(hit.normal)
                     );
-                    StartCoroutine(DespawnAfter(impact, 1.5f));
+
+                    if (impact != null)
+                        StartCoroutine(DespawnAfter(impact, 1.5f));
+                }
+                else
+                {
+                    Debug.LogWarning("Missing particlesPrefab!");
                 }
             }
 
             // Visuals
             if (muzzleFlash != null) muzzleFlash.Play();
-            PoolManager.Instance.SpawnObject(Shell, ShellPosition.position, ShellPosition.rotation);
+            if (Shell != null && ShellPosition != null)
+            {
+                GameObject shellObj = PoolManager.Instance.SpawnObject(Shell, ShellPosition.position, ShellPosition.rotation);
+                if (shellObj == null)
+                    Debug.LogWarning("Shell prefab may be missing or destroyed!");
+            }
+            else
+            {
+                Debug.LogWarning("Shell or ShellPosition is null!");
+            }
 
             float hRecoil = Random.Range(-this.hRecoil, this.hRecoil);
 
@@ -321,7 +340,7 @@ namespace XtremeFPS.WeaponSystem
         {
             if (currentWeapon != "Pistol" && currentWeapon != "Rifle") return;
             reloadStartPosition = weaponFollow.localPos;
-            StartCoroutine(ReloadRoutine());
+            CoroutineRelay.Instance.RunCoroutine(ReloadRoutine());
 
         }
         private void HandleReloadAnimation()
@@ -334,93 +353,101 @@ namespace XtremeFPS.WeaponSystem
             if (currentWeapon != "Pistol" && currentWeapon != "Rifle") return;
             reloading = false;
             HandleReloadAnimation();
-            if (hardMode)
-            {
-                switch (totalBullets.CompareTo(magazineSize))
-                {
-                    case 1:  // totalBullets > magazineSize
-                        BulletsLeft = magazineSize;
-                        totalBullets -= magazineSize;
-                        break;
-                    case 0:  // totalBullets == magazineSize
-                        BulletsLeft = magazineSize;
-                        totalBullets -= magazineSize;
-                        break;
-                    case -1: // totalBullets < magazineSize
-                        BulletsLeft = totalBullets;
-                        totalBullets = 0;
-                        break;
-                    default:
-                        break;
-                }
-            }
-            else //if hardMode is false
-            {
-                if ((BulletsLeft + totalBullets) >= magazineSize)
-                {
-                    int bulletsNeededForReload = magazineSize - BulletsLeft;
-                    BulletsLeft += bulletsNeededForReload;
-                    totalBullets -= bulletsNeededForReload;
-                }
-                else
-                {
-                    int bulletsNeededForReload = magazineSize - BulletsLeft;
-                    BulletsLeft += Mathf.Min(bulletsNeededForReload, totalBullets);
-                    totalBullets -= bulletsNeededForReload;
-                    totalBullets = Mathf.Max(0, totalBullets);
-                }
-            }
+
+            BulletsLeft = magazineSize; // Just refill to full mag
 
             weaponFollow.overridePosition = true;
-            returningFromReload = true; // 👈 start lerping back up after reload
+            returningFromReload = true;
             SetBulletCountUI();
         }
-        /*private IEnumerator ReturnToPosition()
-        {
-            if (canAim)
-            {
-                weaponFollow.overridePosition = true;
-                Vector3 startPos = weaponFollow.localPos;
-                Vector3 target = aiming ? aimingLocalPosition : normalLocalPosition;
-                float elapsedTime = 0f;
-                float returnDuration = 1f;
-
-                while (elapsedTime < returnDuration)
-                {
-                    elapsedTime += Time.deltaTime;
-                    float t = elapsedTime / returnDuration;
-                    weaponFollow.localPos = Vector3.Lerp(startPos, target, t);
-                    yield return null;
-                }
-
-                weaponFollow.localPos = target;
-                yield return new WaitForSeconds(0.05f); // Wait one frame before disabling override
-                weaponFollow.overridePosition = false;
-            }
-        }*/
 
         private void SetBulletCountUI()
         {
             if (bulletCount == null) return;
-            bulletCount.SetText(BulletsLeft + " / " + totalBullets);
+            bulletCount.SetText(BulletsLeft + " / ∞");
         }
 
         private void HandleWeaponSwitching()
         {
-            if (inputManager.switchToPistol)
+            if (isSwitching) return;
+
+            if (inputManager.switchToPistol && currentWeapon != "Pistol")
             {
-                pistolObject.SetActive(true);
-                rifleObject.SetActive(false);
-                currentWeapon = "Pistol";
+                CoroutineRelay.Instance.RunCoroutine(SwitchFromRifleToPistol());
             }
 
-            if (inputManager.switchToRifle)
+            if (inputManager.switchToRifle && currentWeapon != "Rifle")
             {
-                pistolObject.SetActive(false);
-                rifleObject.SetActive(true);
-                currentWeapon = "Rifle";
+                CoroutineRelay.Instance.RunCoroutine(SwitchFromPistolToRifle());
             }
         }
+
+
+        private IEnumerator SwitchFromPistolToRifle()
+        {
+            isSwitching = true;
+            readyToShoot = false;
+
+            rifleObject.SetActive(true);
+
+            bool finished = false;
+            CoroutineRelay.Instance.RunCoroutine(
+                ChainWrapper(CoroutineRelay.Instance.TranslatePistolDown(weaponFollow, weaponSwitchSpeed), () => finished = true)
+            );
+            yield return new WaitUntil(() => finished);
+
+            pistolObject.SetActive(false);
+            currentWeapon = "Rifle";
+
+            finished = false;
+            CoroutineRelay.Instance.RunCoroutine(
+                ChainWrapper(CoroutineRelay.Instance.TranslateRifleUp(weaponFollow, weaponSwitchSpeed), () => finished = true)
+            );
+            yield return new WaitUntil(() => finished);
+
+            readyToShoot = true;
+            isSwitching = false;
+        }
+
+
+
+
+        private IEnumerator SwitchFromRifleToPistol()
+        {
+            isSwitching = true;
+            readyToShoot = false;
+
+            pistolObject.SetActive(true);
+
+            bool finished = false;
+            CoroutineRelay.Instance.RunCoroutine(
+                ChainWrapper(CoroutineRelay.Instance.TranslateRifleDown(weaponFollow, weaponSwitchSpeed), () => finished = true)
+            );
+            yield return new WaitUntil(() => finished);
+
+            rifleObject.SetActive(false);
+            currentWeapon = "Pistol";
+
+            finished = false;
+            CoroutineRelay.Instance.RunCoroutine(
+                ChainWrapper(CoroutineRelay.Instance.TranslatePistolUp(weaponFollow, weaponSwitchSpeed), () => finished = true)
+            );
+            yield return new WaitUntil(() => finished);
+
+            readyToShoot = true;
+            isSwitching = false;
+        }
+
+
+        private IEnumerator ChainWrapper(IEnumerator coroutine, System.Action onComplete)
+        {
+            yield return coroutine;
+            onComplete?.Invoke();
+        }
+
+
+
+
 
         private System.Collections.IEnumerator ReloadRoutine()
         {
@@ -437,6 +464,8 @@ namespace XtremeFPS.WeaponSystem
 
             ReloadFinished();
         }
+
+        
         #endregion
         #region Recoil
         private void HandleWeaponRecoil()
