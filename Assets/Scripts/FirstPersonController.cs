@@ -18,6 +18,7 @@ namespace StarterAssets
         public float CrouchSpeed = 2.5f;
         public float RotationSpeed = 1.0f;
         public float SpeedChangeRate = 10.0f;
+        [SerializeField] GameObject gun;
 
         [Space(10)]
         public float JumpHeight = 1.2f;
@@ -281,6 +282,7 @@ namespace StarterAssets
                 _meleeAnimator.runtimeAnimatorController = meleeAnimatorController;
                 _meleeController.enabled = true;
                 _gunController.enabled = false;
+                gun.SetActive(false);
             }
             else if (_input.switchToGun && currentMode != WeaponMode.Gun)
             {
@@ -288,6 +290,7 @@ namespace StarterAssets
                 _meleeAnimator.runtimeAnimatorController = gunAnimatorController;
                 _meleeController.enabled = false;
                 _gunController.enabled = true;
+                gun.SetActive(true);
             }
 
             _input.switchToMelee = false;

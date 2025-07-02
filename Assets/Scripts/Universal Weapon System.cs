@@ -379,6 +379,7 @@ namespace XtremeFPS.WeaponSystem
             readyToShoot = false;
 
             rifleObject.SetActive(true);
+            rifleObject.GetComponentInChildren<MeshRenderer>().enabled = false;
 
             bool finished = false;
             CoroutineRelay.Instance.RunCoroutine(
@@ -387,6 +388,8 @@ namespace XtremeFPS.WeaponSystem
             yield return new WaitUntil(() => finished);
 
             pistolObject.SetActive(false);
+            rifleObject.GetComponentInChildren<MeshRenderer>().enabled = true;
+
             currentWeapon = "Rifle";
 
             finished = false;
@@ -434,10 +437,6 @@ namespace XtremeFPS.WeaponSystem
             yield return coroutine;
             onComplete?.Invoke();
         }
-
-
-
-
 
         private System.Collections.IEnumerator ReloadRoutine()
         {
